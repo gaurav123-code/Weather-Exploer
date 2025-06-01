@@ -2,17 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Weather Dashboard</title>
-  <!-- Chart.js Library -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     /* Base Reset & Typography */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: Arial, sans-serif;
       background-color: #f5f5f5;
@@ -22,7 +16,7 @@
       min-height: 100vh;
       line-height: 1.6;
     }
-    /* Container */
+    /* Main Container */
     .container {
       max-width: 900px;
       width: 90%;
@@ -32,16 +26,13 @@
       border-radius: 8px;
       box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
-    h1, h2, h3 {
-      text-align: center;
-      color: #007BFF;
-      margin-bottom: 10px;
-    }
+    h1, h2, h3 { text-align: center; color: #007BFF; margin-bottom: 10px; }
     /* Tabs */
     .tabs {
       overflow: hidden;
       background-color: #007BFF;
       border-radius: 8px 8px 0 0;
+      margin-bottom: 10px;
     }
     .tabs button {
       background-color: inherit;
@@ -54,31 +45,16 @@
       transition: background-color 0.3s;
       float: left;
     }
-    .tabs button:hover {
-      background-color: #0056b3;
-    }
-    .tabs button.active {
-      background-color: #0056b3;
-    }
-    /* Tab content */
-    .tabcontent {
-      display: none;
-      padding: 20px 0;
-    }
-    .tabcontent.active {
-      display: block;
-    }
-    /* Search Tab Styles */
-    form {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    input[type="text"] {
-      padding: 10px;
-      font-size: 1rem;
-      width: 80%;
-      border: 1px solid #ccc;
-      border-radius: 4px;
+    .tabs button:hover { background-color: #0056b3; }
+    .tabs button.active { background-color: #0056b3; }
+    /* Tab Content */
+    .tabcontent { display: none; padding: 20px 0; }
+    .tabcontent.active { display: block; }
+    /* Input & Button Styles */
+    form, .dropdown { text-align: center; margin-bottom: 20px; }
+    input[type="text"], select {
+      padding: 10px; font-size: 1rem; width: 80%; max-width: 300px;
+      border: 1px solid #ccc; border-radius: 4px;
     }
     .btn {
       padding: 10px 20px;
@@ -91,12 +67,9 @@
       margin: 5px;
       transition: background-color 0.3s ease;
     }
-    .btn:hover {
-      background-color: #0056b3;
-    }
-    .weather-info, .forecast-grid {
-      margin-top: 20px;
-    }
+    .btn:hover { background-color: #0056b3; }
+    /* Search Tab */
+    .weather-info, .forecast-grid { margin-top: 20px; }
     .weather-card, .forecast-card {
       border: 1px solid #eee;
       padding: 15px;
@@ -111,52 +84,24 @@
       gap: 10px;
       justify-content: center;
     }
-    /* Chart Section fixed height */
-    #chartSection {
-      margin-top: 30px;
-    }
-    #forecastChart {
-      width: 100%;
-      height: 400px;
-    }
-    /* Top World and Continental */
-    .extremes-container, .continental-container {
+    /* Results (Global / Continental) */
+    .results-container {
       display: flex;
       flex-wrap: wrap;
       gap: 20px;
       justify-content: center;
       margin-top: 20px;
     }
-    .extremes-box, .continental-box {
+    .result-box {
       flex: 1 1 300px;
       background-color: #fafafa;
       border: 1px solid #ddd;
       border-radius: 8px;
       padding: 15px;
     }
-    .extremes-box h3, .continental-box h3 {
-      text-align: center;
-      margin-bottom: 10px;
-    }
-    ul {
-      list-style: none;
-      padding: 0;
-    }
-    li {
-      padding: 5px;
-      border-bottom: 1px solid #eee;
-    }
-    /* Continental Tab Dropdown */
-    .continent-dropdown {
-      text-align: center;
-      margin: 15px 0;
-    }
-    select {
-      padding: 10px;
-      font-size: 1rem;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
+    .result-box h3 { text-align: center; margin-bottom: 10px; }
+    ul { list-style-type: none; padding: 0; }
+    li { padding: 5px; border-bottom: 1px solid #eee; }
     /* Footer */
     footer {
       text-align: center;
@@ -170,63 +115,49 @@
 <body>
   <div class="container">
     <h1>Weather Dashboard ☀️🌧️</h1>
+    
     <!-- Tab Headers -->
     <div class="tabs">
       <button class="tablinks" onclick="openTab(event, 'SearchTab')" id="defaultTab">Search</button>
-      <button class="tablinks" onclick="openTab(event, 'TopWorldTab')">Top World</button>
+      <button class="tablinks" onclick="openTab(event, 'GlobalTab')">Top World</button>
       <button class="tablinks" onclick="openTab(event, 'ContinentalTab')">Continental</button>
     </div>
     
     <!-- Search Tab Content -->
     <div id="SearchTab" class="tabcontent active">
-      <!-- Location Input Form -->
       <form id="locationForm">
         <input type="text" id="locationInput" placeholder="Enter a location (City, Country)..." required>
         <button type="submit" class="btn">Get Weather</button>
       </form>
-      <!-- Current Weather Display -->
-      <div id="weatherOutput" class="weather-info">
-        <!-- Weather info loaded dynamically -->
-      </div>
-      <!-- Forecast Grid Display -->
+      <div id="weatherOutput" class="weather-info"></div>
       <div id="forecastSection">
         <h2>Forecast</h2>
-        <div class="forecast-grid" id="forecastGrid">
-          <!-- Forecast cards inserted here -->
-        </div>
-      </div>
-      <!-- Weekly Forecast Chart -->
-      <div id="chartSection">
-        <h2>Weekly Temperature Chart 📈</h2>
-        <canvas id="forecastChart"></canvas>
+        <div class="forecast-grid" id="forecastGrid"></div>
       </div>
     </div>
     
-    <!-- Top World Tab Content -->
-    <div id="TopWorldTab" class="tabcontent">
+    <!-- Global Tab Content (Dynamic aggregation across all continents) -->
+    <div id="GlobalTab" class="tabcontent">
       <h2>Top World Extreme Temperatures 🌡️</h2>
-      <div class="extremes-container">
-        <div class="extremes-box">
-          <h3>Top 10 Hottest</h3>
-          <ul id="hottestList">
-            <!-- List populated using static data -->
-          </ul>
-        </div>
-        <div class="extremes-box">
-          <h3>Top 10 Coldest</h3>
-          <ul id="coldestList">
-            <!-- List populated using static data -->
-          </ul>
-        </div>
+      <div class="dropdown">
+        <select id="globalYearSelect" onchange="updateGlobalDynamic()">
+          <option value="">Select a Year</option>
+          <option value="2020">2020</option>
+          <option value="2021">2021</option>
+          <option value="2022">2022</option>
+        </select>
+      </div>
+      <div class="results-container" id="globalResultsContainer">
+        <!-- Dynamic Global Top 10 lists will be injected here -->
       </div>
     </div>
     
-    <!-- Continental Tab Content -->
+    <!-- Continental Tab Content (Dynamic per continent) -->
     <div id="ContinentalTab" class="tabcontent">
       <h2>Continental Extreme Temperatures 🌍</h2>
-      <div class="continent-dropdown">
-        <select id="continentSelect" onchange="updateContinentalTab()">
-          <option value="">Select a continent</option>
+      <div class="dropdown">
+        <select id="continentSelect" onchange="updateContinentalDynamic()">
+          <option value="">Select a Continent</option>
           <option value="Asia">Asia</option>
           <option value="Europe">Europe</option>
           <option value="North America">North America</option>
@@ -235,8 +166,16 @@
           <option value="Oceania">Oceania</option>
         </select>
       </div>
-      <div class="continental-container" id="continentalContainer">
-        <!-- Continental data will be shown here -->
+      <div class="dropdown">
+        <select id="continentYearSelect" onchange="updateContinentalDynamic()">
+          <option value="">Select a Year</option>
+          <option value="2020">2020</option>
+          <option value="2021">2021</option>
+          <option value="2022">2022</option>
+        </select>
+      </div>
+      <div class="results-container" id="continentalResultsContainer">
+        <!-- Dynamic Continental Top 10 lists will be injected here -->
       </div>
     </div>
   </div>
@@ -248,7 +187,6 @@
   
   <script>
     "use strict";
-    
     /* --------------------
        TAB FUNCTIONALITY
     ---------------------*/
@@ -256,15 +194,16 @@
       const tabcontents = document.getElementsByClassName("tabcontent");
       for (let i = 0; i < tabcontents.length; i++) {
         tabcontents[i].style.display = "none";
+        tabcontents[i].classList.remove("active");
       }
       const tablinks = document.getElementsByClassName("tablinks");
       for (let i = 0; i < tablinks.length; i++) {
-        tablinks[i].className = tablinks[i].className.replace(" active", "");
+        tablinks[i].classList.remove("active");
       }
       document.getElementById(tabName).style.display = "block";
-      evt.currentTarget.className += " active";
+      document.getElementById(tabName).classList.add("active");
+      evt.currentTarget.classList.add("active");
     }
-    // Set default tab open
     document.getElementById("defaultTab").click();
     
     /* --------------------
@@ -272,30 +211,22 @@
     ---------------------*/
     document.getElementById("locationForm").addEventListener("submit", function(e) {
       e.preventDefault();
-      const location = document.getElementById("locationInput").value.trim();
-      if (location) {
-        getWeather(location);
-      }
+      const loc = document.getElementById("locationInput").value.trim();
+      if (loc) getWeather(loc);
     });
     
-    // Global Chart.js instance
-    let forecastChart;
-    
-    // Fetch weather data from wttr.in API (JSON format)
-    function getWeather(location) {
+    function getWeather(loc) {
       const weatherOutput = document.getElementById("weatherOutput");
       const forecastGrid = document.getElementById("forecastGrid");
       weatherOutput.innerHTML = "<p>Loading weather data... ⏳</p>";
       forecastGrid.innerHTML = "";
-      
-      const apiUrl = "https://wttr.in/" + encodeURIComponent(location) + "?format=j1";
-      fetch(apiUrl)
-        .then(response => response.json())
+      const weatherUrl = "https://wttr.in/" + encodeURIComponent(loc) + "?format=j1";
+      fetch(weatherUrl)
+        .then(r => r.json())
         .then(data => {
-          // Current weather
           const current = data.current_condition[0];
           const nearestArea = data.nearest_area[0];
-          const currentHtml = `
+          weatherOutput.innerHTML = `
             <div class="weather-card">
               <h3>Current Weather in ${nearestArea.areaName[0].value}, ${nearestArea.country[0].value} 🌍</h3>
               <p>Temperature: ${current.temp_C}°C</p>
@@ -305,9 +236,6 @@
               <p>Wind: ${current.windspeedKmph} km/h</p>
             </div>
           `;
-          weatherOutput.innerHTML = currentHtml;
-          
-          // Forecast cards (using each day from weather array)
           data.weather.forEach(day => {
             forecastGrid.innerHTML += `
               <div class="forecast-card">
@@ -318,247 +246,185 @@
               </div>
             `;
           });
-          
-          // Update the weekly chart
-          updateForecastChart(data.weather);
         })
-        .catch(error => {
-          console.error("Error fetching weather data:", error);
+        .catch(err => {
+          console.error("Error fetching weather data:", err);
           weatherOutput.innerHTML = "<p>Error fetching weather data. Please try again. ❗</p>";
         });
     }
     
-    // Update or create the weekly forecast chart (fixed height)
-    function updateForecastChart(weatherData) {
-      const ctx = document.getElementById("forecastChart").getContext("2d");
-      const labels = weatherData.map(day => day.date);
-      const minTemps = weatherData.map(day => parseFloat(day.mintempC));
-      const maxTemps = weatherData.map(day => parseFloat(day.maxtempC));
-      const chartData = {
-        labels: labels,
-        datasets: [
-          {
-            label: "Min Temp (°C)",
-            data: minTemps,
-            backgroundColor: "rgba(135, 206, 250, 0.5)",
-            borderColor: "rgba(135, 206, 250, 1)",
-            fill: true,
-            tension: 0.3,
-          },
-          {
-            label: "Max Temp (°C)",
-            data: maxTemps,
-            backgroundColor: "rgba(255, 99, 132, 0.5)",
-            borderColor: "rgba(255, 99, 132, 1)",
-            fill: true,
-            tension: 0.3,
-          }
-        ]
-      };
-    
-      if (forecastChart) {
-        forecastChart.data = chartData;
-        forecastChart.update();
-      } else {
-        forecastChart = new Chart(ctx, {
-          type: "line",
-          data: chartData,
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-              y: {
-                beginAtZero: true,
-                ticks: {
-                  callback: function(value) { return value + "°C"; }
-                }
-              }
-            }
-          }
-        });
-      }
-    }
-    
-    // Return a fun emoticon based on weather description
     function getEmoticon(desc) {
-      const lowerDesc = desc.toLowerCase();
-      if (lowerDesc.includes("sunny") || lowerDesc.includes("clear")) {
-        return "☀️";
-      } else if (lowerDesc.includes("rain") || lowerDesc.includes("drizzle")) {
-        return "🌧️";
-      } else if (lowerDesc.includes("cloud")) {
-        return "☁️";
-      } else if (lowerDesc.includes("snow")) {
-        return "❄️";
-      } else if (lowerDesc.includes("thunder")) {
-        return "⚡";
-      } else {
-        return "";
-      }
+      const d = desc.toLowerCase();
+      if (d.includes("sunny") || d.includes("clear")) return "☀️";
+      if (d.includes("rain") || d.includes("drizzle")) return "🌧️";
+      if (d.includes("cloud")) return "☁️";
+      if (d.includes("snow")) return "❄️";
+      if (d.includes("thunder")) return "⚡";
+      return "";
     }
     
     /* --------------------
-       TOP WORLD TAB FUNCTIONS
+       DYNAMIC GLOBAL TOP LIST FUNCTIONS
+       (Real-time aggregation using Open-Meteo Archive API)
     ---------------------*/
-    // Static sample data for Top World Extreme Temperatures
-    const hottestWorld = [
-      { location: "Death Valley, USA", temp: 56 },
-      { location: "Kuwait City, Kuwait", temp: 55 },
-      { location: "Mitribah, Kuwait", temp: 54 },
-      { location: "Ahvaz, Iran", temp: 54 },
-      { location: "Basra, Iraq", temp: 53 },
-      { location: "Dallol, Ethiopia", temp: 52 },
-      { location: "Jeddah, Saudi Arabia", temp: 52 },
-      { location: "Doha, Qatar", temp: 51 },
-      { location: "Dubai, UAE", temp: 50 },
-      { location: "Riyadh, Saudi Arabia", temp: 50 }
-    ];
     
-    const coldestWorld = [
-      { location: "Oymyakon, Russia", temp: -50 },
-      { location: "Verkhoyansk, Russia", temp: -48 },
-      { location: "Norilsk, Russia", temp: -45 },
-      { location: "Barrow, Alaska, USA", temp: -40 },
-      { location: "Yellowknife, Canada", temp: -38 },
-      { location: "Ulan Bator, Mongolia", temp: -37 },
-      { location: "Sapporo, Japan", temp: -35 },
-      { location: "Reykjavik, Iceland", temp: -30 },
-      { location: "Umea, Sweden", temp: -28 },
-      { location: "Helsinki, Finland", temp: -25 }
-    ];
-    
-    function populateTopWorld() {
-      const hottestList = document.getElementById("hottestList");
-      const coldestList = document.getElementById("coldestList");
-      hottestList.innerHTML = "";
-      coldestList.innerHTML = "";
-      hottestWorld.forEach(item => {
-        const li = document.createElement("li");
-        li.textContent = `${item.location} - ${item.temp}°C 🔥`;
-        hottestList.appendChild(li);
-      });
-      coldestWorld.forEach(item => {
-        const li = document.createElement("li");
-        li.textContent = `${item.location} - ${item.temp}°C ❄️`;
-        coldestList.appendChild(li);
-      });
-    }
-    // Populate Top World tab on load
-    populateTopWorld();
-    
-    /* --------------------
-       CONTINENTAL TAB FUNCTIONS
-    ---------------------*/
-    // Sample static data for Continental Extreme Temperatures
-    const continentalData = {
-      "Asia": {
-        hottest: [
-          { location: "Kuwait City, Kuwait", temp: 55 },
-          { location: "Mitribah, Kuwait", temp: 54 },
-          { location: "Ahvaz, Iran", temp: 54 }
-        ],
-        coldest: [
-          { location: "Oymyakon, Russia", temp: -50 },
-          { location: "Ulaanbaatar, Mongolia", temp: -38 },
-          { location: "Astana, Kazakhstan", temp: -35 }
-        ]
-      },
-      "Europe": {
-        hottest: [
-          { location: "Seville, Spain", temp: 48 },
-          { location: "Athens, Greece", temp: 47 },
-          { location: "Rome, Italy", temp: 46 }
-        ],
-        coldest: [
-          { location: "Murmansk, Russia", temp: -30 },
-          { location: "Reykjavik, Iceland", temp: -20 },
-          { location: "Oslo, Norway", temp: -15 }
-        ]
-      },
-      "North America": {
-        hottest: [
-          { location: "Death Valley, USA", temp: 56 },
-          { location: "Phoenix, USA", temp: 50 },
-          { location: "Las Vegas, USA", temp: 48 }
-        ],
-        coldest: [
-          { location: "Barrow, Alaska, USA", temp: -40 },
-          { location: "Yellowknife, Canada", temp: -38 },
-          { location: "Iqaluit, Canada", temp: -35 }
-        ]
-      },
-      "South America": {
-        hottest: [
-          { location: "Rivadavia, Argentina", temp: 45 },
-          { location: "Cochabamba, Bolivia", temp: 43 },
-          { location: "Lima, Peru", temp: 42 }
-        ],
-        coldest: [
-          { location: "Ushuaia, Argentina", temp: -10 },
-          { location: "Punta Arenas, Chile", temp: -7 },
-          { location: "La Paz, Bolivia", temp: -5 }
-        ]
-      },
-      "Africa": {
-        hottest: [
-          { location: "Dallol, Ethiopia", temp: 52 },
-          { location: "Korbous, Tunisia", temp: 50 },
-          { location: "Marrakech, Morocco", temp: 49 }
-        ],
-        coldest: [
-          { location: "Ifrane, Morocco", temp: -2 },
-          { location: "Sutherland, South Africa", temp: -5 },
-          { location: "Windhoek, Namibia", temp: -3 }
-        ]
-      },
-      "Oceania": {
-        hottest: [
-          { location: "Alice Springs, Australia", temp: 45 },
-          { location: "Perth, Australia", temp: 43 },
-          { location: "Darwin, Australia", temp: 42 }
-        ],
-        coldest: [
-          { location: "Queenstown, New Zealand", temp: -5 },
-          { location: "Christchurch, New Zealand", temp: -3 },
-          { location: "Nelson, New Zealand", temp: -2 }
-        ]
-      }
+    // Predefined cities from all continents (combining all keys from continentCities)
+    const continentCities = {
+      "Asia": [
+        { name: "Tokyo", lat: 35.6895, lon: 139.6917 },
+        { name: "Delhi", lat: 28.7041, lon: 77.1025 },
+        { name: "Beijing", lat: 39.9042, lon: 116.4074 },
+        { name: "Bangkok", lat: 13.7563, lon: 100.5018 },
+        { name: "Dubai", lat: 25.2048, lon: 55.2708 },
+        { name: "Kuala Lumpur", lat: 3.1390, lon: 101.6869 },
+        { name: "Mumbai", lat: 19.0760, lon: 72.8777 },
+        { name: "Seoul", lat: 37.5665, lon: 126.9780 },
+        { name: "Singapore", lat: 1.3521, lon: 103.8198 },
+        { name: "Istanbul", lat: 41.0082, lon: 28.9784 }
+      ],
+      "Europe": [
+        { name: "London", lat: 51.5074, lon: -0.1278 },
+        { name: "Paris", lat: 48.8566, lon: 2.3522 },
+        { name: "Berlin", lat: 52.5200, lon: 13.4050 },
+        { name: "Madrid", lat: 40.4168, lon: -3.7038 },
+        { name: "Rome", lat: 41.9028, lon: 12.4964 },
+        { name: "Moscow", lat: 55.7558, lon: 37.6173 },
+        { name: "Vienna", lat: 48.2082, lon: 16.3738 },
+        { name: "Amsterdam", lat: 52.3676, lon: 4.9041 },
+        { name: "Prague", lat: 50.0755, lon: 14.4378 },
+        { name: "Lisbon", lat: 38.7223, lon: -9.1393 }
+      ],
+      "North America": [
+        { name: "New York", lat: 40.7128, lon: -74.0060 },
+        { name: "Los Angeles", lat: 34.0522, lon: -118.2437 },
+        { name: "Chicago", lat: 41.8781, lon: -87.6298 },
+        { name: "Toronto", lat: 43.6532, lon: -79.3832 },
+        { name: "Mexico City", lat: 19.4326, lon: -99.1332 },
+        { name: "Houston", lat: 29.7604, lon: -95.3698 },
+        { name: "Phoenix", lat: 33.4484, lon: -112.0740 },
+        { name: "Philadelphia", lat: 39.9526, lon: -75.1652 },
+        { name: "San Antonio", lat: 29.4241, lon: -98.4936 },
+        { name: "San Diego", lat: 32.7157, lon: -117.1611 }
+      ],
+      "South America": [
+        { name: "São Paulo", lat: -23.5505, lon: -46.6333 },
+        { name: "Buenos Aires", lat: -34.6037, lon: -58.3816 },
+        { name: "Lima", lat: -12.0464, lon: -77.0428 },
+        { name: "Bogotá", lat: 4.7110, lon: -74.0721 },
+        { name: "Santiago", lat: -33.4489, lon: -70.6693 },
+        { name: "Caracas", lat: 10.4806, lon: -66.9036 },
+        { name: "Quito", lat: -0.1807, lon: -78.4678 },
+        { name: "Medellín", lat: 6.2442, lon: -75.5812 },
+        { name: "Guayaquil", lat: -2.1894, lon: -79.8891 },
+        { name: "Montevideo", lat: -34.9011, lon: -56.1645 }
+      ],
+      "Africa": [
+        { name: "Cairo", lat: 30.0444, lon: 31.2357 },
+        { name: "Lagos", lat: 6.5244, lon: 3.3792 },
+        { name: "Johannesburg", lat: -26.2041, lon: 28.0473 },
+        { name: "Nairobi", lat: -1.2921, lon: 36.8219 },
+        { name: "Casablanca", lat: 33.5731, lon: -7.5898 },
+        { name: "Khartoum", lat: 15.5007, lon: 32.5599 },
+        { name: "Accra", lat: 5.6037, lon: -0.1870 },
+        { name: "Addis Ababa", lat: 8.9806, lon: 38.7578 },
+        { name: "Cape Town", lat: -33.9249, lon: 18.4241 },
+        { name: "Durban", lat: -29.8587, lon: 31.0218 }
+      ],
+      "Oceania": [
+        { name: "Sydney", lat: -33.8688, lon: 151.2093 },
+        { name: "Melbourne", lat: -37.8136, lon: 144.9631 },
+        { name: "Auckland", lat: -36.8485, lon: 174.7633 },
+        { name: "Wellington", lat: -41.2865, lon: 174.7762 },
+        { name: "Brisbane", lat: -27.4698, lon: 153.0251 },
+        { name: "Perth", lat: -31.9505, lon: 115.8605 },
+        { name: "Adelaide", lat: -34.9285, lon: 138.6007 },
+        { name: "Hobart", lat: -42.8821, lon: 147.3272 },
+        { name: "Christchurch", lat: -43.5321, lon: 172.6362 },
+        { name: "Queenstown", lat: -45.0312, lon: 168.6626 }
+      ]
     };
-    
-    function updateContinentalTab() {
-      const select = document.getElementById("continentSelect");
-      const continent = select.value;
-      const container = document.getElementById("continentalContainer");
-      container.innerHTML = "";
-      if (!continent || !continentalData[continent]) return;
-      const data = continentalData[continent];
+
+    // Function to fetch a city's extreme temperatures using Open-Meteo Archive API.
+    async function fetchCityExtreme(city, startDate, endDate) {
+      const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${city.lat}&longitude=${city.lon}&start_date=${startDate}&end_date=${endDate}&daily=temperature_2m_max,temperature_2m_min&timezone=UTC`;
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+        if (data.daily && data.daily.temperature_2m_max && data.daily.temperature_2m_min) {
+          const cityMax = Math.max(...data.daily.temperature_2m_max);
+          const cityMin = Math.min(...data.daily.temperature_2m_min);
+          return { name: city.name, max: cityMax, min: cityMin };
+        }
+      } catch (error) {
+        console.error(`Error for ${city.name}:`, error);
+      }
+      return { name: city.name, max: null, min: null };
+    }
+
+    // GLOBAL TOP EXTREMES: Aggregate data across all cities.
+    async function updateGlobalDynamic() {
+      const year = document.getElementById("globalYearSelect").value;
+      const container = document.getElementById("globalResultsContainer");
+      if (!year) { container.innerHTML = "<p>Please select a year.</p>"; return; }
+      container.innerHTML = "<p>Loading global extreme data... ⏳</p>";
       
-      // Create box for hottest
-      const hottestBox = document.createElement("div");
-      hottestBox.className = "continental-box";
-      hottestBox.innerHTML = "<h3>Top Hottest in " + continent + " 🔥</h3><ul id='continentalHottest'></ul>";
-      // Populate hottest
-      const hottestUl = hottestBox.querySelector("ul");
-      data.hottest.forEach(item => {
-        const li = document.createElement("li");
-        li.textContent = `${item.location} - ${item.temp}°C`;
-        hottestUl.appendChild(li);
-      });
+      let allCities = [];
+      for (const cont in continentCities)
+        allCities = allCities.concat(continentCities[cont]);
       
-      // Create box for coldest
-      const coldestBox = document.createElement("div");
-      coldestBox.className = "continental-box";
-      coldestBox.innerHTML = "<h3>Top Coldest in " + continent + " ❄️</h3><ul id='continentalColdest'></ul>";
-      // Populate coldest
-      const coldestUl = coldestBox.querySelector("ul");
-      data.coldest.forEach(item => {
-        const li = document.createElement("li");
-        li.textContent = `${item.location} - ${item.temp}°C`;
-        coldestUl.appendChild(li);
-      });
+      const startDate = `${year}-01-01`;
+      const endDate = `${year}-12-31`;
+      const promises = allCities.map(city => fetchCityExtreme(city, startDate, endDate));
+      const results = await Promise.all(promises);
+      const valid = results.filter(r => typeof r.max === "number" && typeof r.min === "number");
+      const sortedHottest = valid.slice().sort((a, b) => b.max - a.max).slice(0, 10);
+      const sortedColdest = valid.slice().sort((a, b) => a.min - b.min).slice(0, 10);
+      displayGlobalResults(year, sortedHottest, sortedColdest);
+    }
+
+    function displayGlobalResults(year, hottest, coldest) {
+      const container = document.getElementById("globalResultsContainer");
+      let hottestHtml = `<div class="result-box"><h3>Top 10 Hottest in the World (${year}) 🔥</h3><ul>`;
+      hottest.forEach(item => { hottestHtml += `<li>${item.name} - ${item.max}°C</li>`; });
+      hottestHtml += "</ul></div>";
       
-      container.appendChild(hottestBox);
-      container.appendChild(coldestBox);
+      let coldestHtml = `<div class="result-box"><h3>Top 10 Coldest in the World (${year}) ❄️</h3><ul>`;
+      coldest.forEach(item => { coldestHtml += `<li>${item.name} - ${item.min}°C</li>`; });
+      coldestHtml += "</ul></div>";
+      
+      container.innerHTML = hottestHtml + coldestHtml;
+    }
+
+    // CONTINENTAL TOP EXTREMES: For a specific continent.
+    async function updateContinentalDynamic() {
+      const continent = document.getElementById("continentSelect").value;
+      const year = document.getElementById("continentYearSelect").value;
+      const container = document.getElementById("continentalResultsContainer");
+      if (!continent || !year) { container.innerHTML = "<p>Please select both a continent and a year.</p>"; return; }
+      container.innerHTML = "<p>Loading continental extreme data... ⏳</p>";
+      
+      const cities = continentCities[continent];
+      const startDate = `${year}-01-01`;
+      const endDate = `${year}-12-31`;
+      const promises = cities.map(city => fetchCityExtreme(city, startDate, endDate));
+      const results = await Promise.all(promises);
+      const valid = results.filter(r => typeof r.max === "number" && typeof r.min === "number");
+      const sortedHottest = valid.slice().sort((a, b) => b.max - a.max).slice(0, 10);
+      const sortedColdest = valid.slice().sort((a, b) => a.min - b.min).slice(0, 10);
+      displayContinentalResults(continent, year, sortedHottest, sortedColdest);
+    }
+
+    function displayContinentalResults(continent, year, hottest, coldest) {
+      const container = document.getElementById("continentalResultsContainer");
+      let hottestHtml = `<div class="result-box"><h3>Top 10 Hottest in ${continent} (${year}) 🔥</h3><ul>`;
+      hottest.forEach(item => { hottestHtml += `<li>${item.name} - ${item.max}°C</li>`; });
+      hottestHtml += "</ul></div>";
+      
+      let coldestHtml = `<div class="result-box"><h3>Top 10 Coldest in ${continent} (${year}) ❄️</h3><ul>`;
+      coldest.forEach(item => { coldestHtml += `<li>${item.name} - ${item.min}°C</li>`; });
+      coldestHtml += "</ul></div>";
+      
+      container.innerHTML = hottestHtml + coldestHtml;
     }
   </script>
 </body>
