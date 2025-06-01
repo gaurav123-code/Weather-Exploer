@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Weather Dashboard</title>
+  <style>
+    /* Reset & Base Styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 900px;
+      width: 90%;
+      margin: 30px auto;
+      background-color: #fff;
+      padding: 20px 30px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #007BFF;
+    }
+    form {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    input[type="text"] {
+      padding: 10px;
+      font-size: 1rem;
+      width: 80%;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .btn {
+      padding: 10px 20px;
+      font-size: 1rem;
+      background-color: #007BFF;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin: 5px;
+      transition: background-color 0.3s ease;
+    }
+    .btn:hover {
+      background-color: #0056b3;
+    }
+    .weather-info {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    .weather-card {
+      border: 1px solid #eee;
+      padding: 15px;
+      border-radius: 8px;
+      background-color: #e9f2f9;
+      text-align: center;
+    }
+    .weather-card h3 {
+      margin-bottom: 8px;
+      color: #333;
+    }
+    .forecast-container {
+      margin-top: 20px;
+    }
+    .forecast-container h3 {
+      text-align: center;
+      margin-bottom: 10px;
+      color: #007BFF;
+    }
+    .forecast-grid {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .forecast-card {
+      border: 1px solid #ddd;
+      padding: 10px;
+      border-radius: 6px;
+      background-color: #fafafa;
+      margin: 5px;
+      text-align: center;
+      flex: 1 1 150px;
+    }
+    footer {
+      text-align: center;
+      padding: 15px;
+      background-color: #fff;
+      margin-top: auto;
+      box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Weather Dashboard</h1>
+    <!-- Location Input Form -->
+    <form id="locationForm">
+      <input type="text" id="locationInput" placeholder="Enter a location (city, country)..." required>
+      <button type="submit" class="btn">Get Weather</button>
+    </form>
+    <!-- Current Weather Display -->
+    <div id="weatherOutput" class="weather-info">
+      <!-- Weather info is built here dynamically -->
+    </div>
+    <!-- Forecast Section -->
+    <div id="forecastSection" class="forecast-container">
+      <!-- Forecast data is built here dynamically -->
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    Bocaletto Luca
+  </footer>
+
+  <script>
+    "use strict";
+
+    // Listen for the form submit event and fetch weather data
+    document.getElementById("locationForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const location = document.getElementById("locationInput").value.trim();
+      if (location) {
+        getWeather(location);
+      }
+    });
+
+    // Function to fetch weather data from wttr.in
+    function getWeather(location) {
+      const weatherOutput = document.getElementById("weatherOutput");
+      const forecastSection = document.getElementById("forecastSection");
+      weatherOutput.innerHTML = "<p>Loading weather data...</p>";
+      forecastSection.innerHTML = "";
+      
+      // wttr.in API endpoint in JSON format
+      const apiUrl = "https://wttr.in/" + encodeURIComponent(location) + "?format=j1";
+
+      fetch(apiUrl)
+        .then(response => response.json())
+        .then(data => {
+          // Display current weather conditions from data.current_condition[0]
+          const current = data.current_condition[0];
+          const nearestArea = data.nearest_area[0];
+          let currentHtml = `
+            <div class="weather-card">
+              <h3>Current Weather in ${nearestArea.areaName[0].value}, ${nearestArea.country[0].value}</h3>
+              <p>Temperature: ${current.temp_C}°C</p>
+              <p>Feels Like: ${current.FeelsLikeC}°C</p>
+              <p>Condition: ${current.weatherDesc[0].value}</p>
+              <p>Humidity: ${current.humidity}%</p>
+              <p>Wind: ${current.windspeedKmph} km/h</p>
+            </div>
+          `;
+          weatherOutput.innerHTML = currentHtml;
+
+          // Display forecast info from data.weather array
+          let forecastHtml = "<h3>Forecast</h3><div class='forecast-grid'>";
+          data.weather.forEach(day => {
+            forecastHtml += `
+              <div class="forecast-card">
+                <p><strong>${day.date}</strong></p>
+                <p>Min: ${day.mintempC}°C</p>
+                <p>Max: ${day.maxtempC}°C</p>
+                <p>${day.hourly[4].weatherDesc[0].value}</p>
+              </div>
+            `;
+          });
+          forecastHtml += "</div>";
+          forecastSection.innerHTML = forecastHtml;
+        })
+        .catch(error => {
+          console.error("Error fetching weather data:", error);
+          weatherOutput.innerHTML = "<p>Error fetching weather data. Please try again.</p>";
+        });
+    }
+  </script>
+</body>
+</html>
