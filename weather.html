@@ -4,8 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Weather Dashboard</title>
+  <!-- Chart.js Library -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    /* Reset & Base Styles */
+    /* Base Reset & Typography */
     * {
       margin: 0;
       padding: 0;
@@ -18,7 +20,9 @@
       display: flex;
       flex-direction: column;
       min-height: 100vh;
+      line-height: 1.6;
     }
+    /* Container */
     .container {
       max-width: 900px;
       width: 90%;
@@ -26,13 +30,45 @@
       background-color: #fff;
       padding: 20px 30px;
       border-radius: 8px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
-    h1 {
+    h1, h2, h3 {
       text-align: center;
-      margin-bottom: 20px;
       color: #007BFF;
+      margin-bottom: 10px;
     }
+    /* Tabs */
+    .tabs {
+      overflow: hidden;
+      background-color: #007BFF;
+      border-radius: 8px 8px 0 0;
+    }
+    .tabs button {
+      background-color: inherit;
+      border: none;
+      outline: none;
+      cursor: pointer;
+      padding: 14px 16px;
+      color: #fff;
+      font-size: 1rem;
+      transition: background-color 0.3s;
+      float: left;
+    }
+    .tabs button:hover {
+      background-color: #0056b3;
+    }
+    .tabs button.active {
+      background-color: #0056b3;
+    }
+    /* Tab content */
+    .tabcontent {
+      display: none;
+      padding: 20px 0;
+    }
+    .tabcontent.active {
+      display: block;
+    }
+    /* Search Tab Styles */
     form {
       text-align: center;
       margin-bottom: 20px;
@@ -41,7 +77,6 @@
       padding: 10px;
       font-size: 1rem;
       width: 80%;
-      margin-bottom: 10px;
       border: 1px solid #ccc;
       border-radius: 4px;
     }
@@ -59,45 +94,70 @@
     .btn:hover {
       background-color: #0056b3;
     }
-    .weather-info {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
+    .weather-info, .forecast-grid {
+      margin-top: 20px;
     }
-    .weather-card {
+    .weather-card, .forecast-card {
       border: 1px solid #eee;
       padding: 15px;
       border-radius: 8px;
       background-color: #e9f2f9;
       text-align: center;
-    }
-    .weather-card h3 {
-      margin-bottom: 8px;
-      color: #333;
-    }
-    .forecast-container {
-      margin-top: 20px;
-    }
-    .forecast-container h3 {
-      text-align: center;
-      margin-bottom: 10px;
-      color: #007BFF;
+      margin-bottom: 15px;
     }
     .forecast-grid {
       display: flex;
-      gap: 10px;
       flex-wrap: wrap;
+      gap: 10px;
       justify-content: center;
     }
-    .forecast-card {
-      border: 1px solid #ddd;
-      padding: 10px;
-      border-radius: 6px;
-      background-color: #fafafa;
-      margin: 5px;
-      text-align: center;
-      flex: 1 1 150px;
+    /* Chart Section fixed height */
+    #chartSection {
+      margin-top: 30px;
     }
+    #forecastChart {
+      width: 100%;
+      height: 400px;
+    }
+    /* Top World and Continental */
+    .extremes-container, .continental-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: center;
+      margin-top: 20px;
+    }
+    .extremes-box, .continental-box {
+      flex: 1 1 300px;
+      background-color: #fafafa;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 15px;
+    }
+    .extremes-box h3, .continental-box h3 {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      padding: 5px;
+      border-bottom: 1px solid #eee;
+    }
+    /* Continental Tab Dropdown */
+    .continent-dropdown {
+      text-align: center;
+      margin: 15px 0;
+    }
+    select {
+      padding: 10px;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    /* Footer */
     footer {
       text-align: center;
       padding: 15px;
@@ -109,31 +169,107 @@
 </head>
 <body>
   <div class="container">
-    <h1>Weather Dashboard</h1>
-    <!-- Location Input Form -->
-    <form id="locationForm">
-      <input type="text" id="locationInput" placeholder="Enter a location (city, country)..." required>
-      <button type="submit" class="btn">Get Weather</button>
-    </form>
-    <!-- Current Weather Display -->
-    <div id="weatherOutput" class="weather-info">
-      <!-- Weather info is built here dynamically -->
+    <h1>Weather Dashboard ☀️🌧️</h1>
+    <!-- Tab Headers -->
+    <div class="tabs">
+      <button class="tablinks" onclick="openTab(event, 'SearchTab')" id="defaultTab">Search</button>
+      <button class="tablinks" onclick="openTab(event, 'TopWorldTab')">Top World</button>
+      <button class="tablinks" onclick="openTab(event, 'ContinentalTab')">Continental</button>
     </div>
-    <!-- Forecast Section -->
-    <div id="forecastSection" class="forecast-container">
-      <!-- Forecast data is built here dynamically -->
+    
+    <!-- Search Tab Content -->
+    <div id="SearchTab" class="tabcontent active">
+      <!-- Location Input Form -->
+      <form id="locationForm">
+        <input type="text" id="locationInput" placeholder="Enter a location (City, Country)..." required>
+        <button type="submit" class="btn">Get Weather</button>
+      </form>
+      <!-- Current Weather Display -->
+      <div id="weatherOutput" class="weather-info">
+        <!-- Weather info loaded dynamically -->
+      </div>
+      <!-- Forecast Grid Display -->
+      <div id="forecastSection">
+        <h2>Forecast</h2>
+        <div class="forecast-grid" id="forecastGrid">
+          <!-- Forecast cards inserted here -->
+        </div>
+      </div>
+      <!-- Weekly Forecast Chart -->
+      <div id="chartSection">
+        <h2>Weekly Temperature Chart 📈</h2>
+        <canvas id="forecastChart"></canvas>
+      </div>
+    </div>
+    
+    <!-- Top World Tab Content -->
+    <div id="TopWorldTab" class="tabcontent">
+      <h2>Top World Extreme Temperatures 🌡️</h2>
+      <div class="extremes-container">
+        <div class="extremes-box">
+          <h3>Top 10 Hottest</h3>
+          <ul id="hottestList">
+            <!-- List populated using static data -->
+          </ul>
+        </div>
+        <div class="extremes-box">
+          <h3>Top 10 Coldest</h3>
+          <ul id="coldestList">
+            <!-- List populated using static data -->
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Continental Tab Content -->
+    <div id="ContinentalTab" class="tabcontent">
+      <h2>Continental Extreme Temperatures 🌍</h2>
+      <div class="continent-dropdown">
+        <select id="continentSelect" onchange="updateContinentalTab()">
+          <option value="">Select a continent</option>
+          <option value="Asia">Asia</option>
+          <option value="Europe">Europe</option>
+          <option value="North America">North America</option>
+          <option value="South America">South America</option>
+          <option value="Africa">Africa</option>
+          <option value="Oceania">Oceania</option>
+        </select>
+      </div>
+      <div class="continental-container" id="continentalContainer">
+        <!-- Continental data will be shown here -->
+      </div>
     </div>
   </div>
-
+  
   <!-- Footer -->
   <footer>
     Bocaletto Luca
   </footer>
-
+  
   <script>
     "use strict";
-
-    // Listen for the form submit event and fetch weather data
+    
+    /* --------------------
+       TAB FUNCTIONALITY
+    ---------------------*/
+    function openTab(evt, tabName) {
+      const tabcontents = document.getElementsByClassName("tabcontent");
+      for (let i = 0; i < tabcontents.length; i++) {
+        tabcontents[i].style.display = "none";
+      }
+      const tablinks = document.getElementsByClassName("tablinks");
+      for (let i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+      }
+      document.getElementById(tabName).style.display = "block";
+      evt.currentTarget.className += " active";
+    }
+    // Set default tab open
+    document.getElementById("defaultTab").click();
+    
+    /* --------------------
+       SEARCH TAB FUNCTIONS
+    ---------------------*/
     document.getElementById("locationForm").addEventListener("submit", function(e) {
       e.preventDefault();
       const location = document.getElementById("locationInput").value.trim();
@@ -141,54 +277,288 @@
         getWeather(location);
       }
     });
-
-    // Function to fetch weather data from wttr.in
+    
+    // Global Chart.js instance
+    let forecastChart;
+    
+    // Fetch weather data from wttr.in API (JSON format)
     function getWeather(location) {
       const weatherOutput = document.getElementById("weatherOutput");
-      const forecastSection = document.getElementById("forecastSection");
-      weatherOutput.innerHTML = "<p>Loading weather data...</p>";
-      forecastSection.innerHTML = "";
+      const forecastGrid = document.getElementById("forecastGrid");
+      weatherOutput.innerHTML = "<p>Loading weather data... ⏳</p>";
+      forecastGrid.innerHTML = "";
       
-      // wttr.in API endpoint in JSON format
       const apiUrl = "https://wttr.in/" + encodeURIComponent(location) + "?format=j1";
-
       fetch(apiUrl)
         .then(response => response.json())
         .then(data => {
-          // Display current weather conditions from data.current_condition[0]
+          // Current weather
           const current = data.current_condition[0];
           const nearestArea = data.nearest_area[0];
-          let currentHtml = `
+          const currentHtml = `
             <div class="weather-card">
-              <h3>Current Weather in ${nearestArea.areaName[0].value}, ${nearestArea.country[0].value}</h3>
+              <h3>Current Weather in ${nearestArea.areaName[0].value}, ${nearestArea.country[0].value} 🌍</h3>
               <p>Temperature: ${current.temp_C}°C</p>
               <p>Feels Like: ${current.FeelsLikeC}°C</p>
-              <p>Condition: ${current.weatherDesc[0].value}</p>
+              <p>Condition: ${current.weatherDesc[0].value} ${getEmoticon(current.weatherDesc[0].value)}</p>
               <p>Humidity: ${current.humidity}%</p>
               <p>Wind: ${current.windspeedKmph} km/h</p>
             </div>
           `;
           weatherOutput.innerHTML = currentHtml;
-
-          // Display forecast info from data.weather array
-          let forecastHtml = "<h3>Forecast</h3><div class='forecast-grid'>";
+          
+          // Forecast cards (using each day from weather array)
           data.weather.forEach(day => {
-            forecastHtml += `
+            forecastGrid.innerHTML += `
               <div class="forecast-card">
                 <p><strong>${day.date}</strong></p>
                 <p>Min: ${day.mintempC}°C</p>
                 <p>Max: ${day.maxtempC}°C</p>
-                <p>${day.hourly[4].weatherDesc[0].value}</p>
+                <p>${day.hourly[4].weatherDesc[0].value} ${getEmoticon(day.hourly[4].weatherDesc[0].value)}</p>
               </div>
             `;
           });
-          forecastHtml += "</div>";
-          forecastSection.innerHTML = forecastHtml;
+          
+          // Update the weekly chart
+          updateForecastChart(data.weather);
         })
         .catch(error => {
           console.error("Error fetching weather data:", error);
-          weatherOutput.innerHTML = "<p>Error fetching weather data. Please try again.</p>";
+          weatherOutput.innerHTML = "<p>Error fetching weather data. Please try again. ❗</p>";
         });
+    }
+    
+    // Update or create the weekly forecast chart (fixed height)
+    function updateForecastChart(weatherData) {
+      const ctx = document.getElementById("forecastChart").getContext("2d");
+      const labels = weatherData.map(day => day.date);
+      const minTemps = weatherData.map(day => parseFloat(day.mintempC));
+      const maxTemps = weatherData.map(day => parseFloat(day.maxtempC));
+      const chartData = {
+        labels: labels,
+        datasets: [
+          {
+            label: "Min Temp (°C)",
+            data: minTemps,
+            backgroundColor: "rgba(135, 206, 250, 0.5)",
+            borderColor: "rgba(135, 206, 250, 1)",
+            fill: true,
+            tension: 0.3,
+          },
+          {
+            label: "Max Temp (°C)",
+            data: maxTemps,
+            backgroundColor: "rgba(255, 99, 132, 0.5)",
+            borderColor: "rgba(255, 99, 132, 1)",
+            fill: true,
+            tension: 0.3,
+          }
+        ]
+      };
+    
+      if (forecastChart) {
+        forecastChart.data = chartData;
+        forecastChart.update();
+      } else {
+        forecastChart = new Chart(ctx, {
+          type: "line",
+          data: chartData,
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  callback: function(value) { return value + "°C"; }
+                }
+              }
+            }
+          }
+        });
+      }
+    }
+    
+    // Return a fun emoticon based on weather description
+    function getEmoticon(desc) {
+      const lowerDesc = desc.toLowerCase();
+      if (lowerDesc.includes("sunny") || lowerDesc.includes("clear")) {
+        return "☀️";
+      } else if (lowerDesc.includes("rain") || lowerDesc.includes("drizzle")) {
+        return "🌧️";
+      } else if (lowerDesc.includes("cloud")) {
+        return "☁️";
+      } else if (lowerDesc.includes("snow")) {
+        return "❄️";
+      } else if (lowerDesc.includes("thunder")) {
+        return "⚡";
+      } else {
+        return "";
+      }
+    }
+    
+    /* --------------------
+       TOP WORLD TAB FUNCTIONS
+    ---------------------*/
+    // Static sample data for Top World Extreme Temperatures
+    const hottestWorld = [
+      { location: "Death Valley, USA", temp: 56 },
+      { location: "Kuwait City, Kuwait", temp: 55 },
+      { location: "Mitribah, Kuwait", temp: 54 },
+      { location: "Ahvaz, Iran", temp: 54 },
+      { location: "Basra, Iraq", temp: 53 },
+      { location: "Dallol, Ethiopia", temp: 52 },
+      { location: "Jeddah, Saudi Arabia", temp: 52 },
+      { location: "Doha, Qatar", temp: 51 },
+      { location: "Dubai, UAE", temp: 50 },
+      { location: "Riyadh, Saudi Arabia", temp: 50 }
+    ];
+    
+    const coldestWorld = [
+      { location: "Oymyakon, Russia", temp: -50 },
+      { location: "Verkhoyansk, Russia", temp: -48 },
+      { location: "Norilsk, Russia", temp: -45 },
+      { location: "Barrow, Alaska, USA", temp: -40 },
+      { location: "Yellowknife, Canada", temp: -38 },
+      { location: "Ulan Bator, Mongolia", temp: -37 },
+      { location: "Sapporo, Japan", temp: -35 },
+      { location: "Reykjavik, Iceland", temp: -30 },
+      { location: "Umea, Sweden", temp: -28 },
+      { location: "Helsinki, Finland", temp: -25 }
+    ];
+    
+    function populateTopWorld() {
+      const hottestList = document.getElementById("hottestList");
+      const coldestList = document.getElementById("coldestList");
+      hottestList.innerHTML = "";
+      coldestList.innerHTML = "";
+      hottestWorld.forEach(item => {
+        const li = document.createElement("li");
+        li.textContent = `${item.location} - ${item.temp}°C 🔥`;
+        hottestList.appendChild(li);
+      });
+      coldestWorld.forEach(item => {
+        const li = document.createElement("li");
+        li.textContent = `${item.location} - ${item.temp}°C ❄️`;
+        coldestList.appendChild(li);
+      });
+    }
+    // Populate Top World tab on load
+    populateTopWorld();
+    
+    /* --------------------
+       CONTINENTAL TAB FUNCTIONS
+    ---------------------*/
+    // Sample static data for Continental Extreme Temperatures
+    const continentalData = {
+      "Asia": {
+        hottest: [
+          { location: "Kuwait City, Kuwait", temp: 55 },
+          { location: "Mitribah, Kuwait", temp: 54 },
+          { location: "Ahvaz, Iran", temp: 54 }
+        ],
+        coldest: [
+          { location: "Oymyakon, Russia", temp: -50 },
+          { location: "Ulaanbaatar, Mongolia", temp: -38 },
+          { location: "Astana, Kazakhstan", temp: -35 }
+        ]
+      },
+      "Europe": {
+        hottest: [
+          { location: "Seville, Spain", temp: 48 },
+          { location: "Athens, Greece", temp: 47 },
+          { location: "Rome, Italy", temp: 46 }
+        ],
+        coldest: [
+          { location: "Murmansk, Russia", temp: -30 },
+          { location: "Reykjavik, Iceland", temp: -20 },
+          { location: "Oslo, Norway", temp: -15 }
+        ]
+      },
+      "North America": {
+        hottest: [
+          { location: "Death Valley, USA", temp: 56 },
+          { location: "Phoenix, USA", temp: 50 },
+          { location: "Las Vegas, USA", temp: 48 }
+        ],
+        coldest: [
+          { location: "Barrow, Alaska, USA", temp: -40 },
+          { location: "Yellowknife, Canada", temp: -38 },
+          { location: "Iqaluit, Canada", temp: -35 }
+        ]
+      },
+      "South America": {
+        hottest: [
+          { location: "Rivadavia, Argentina", temp: 45 },
+          { location: "Cochabamba, Bolivia", temp: 43 },
+          { location: "Lima, Peru", temp: 42 }
+        ],
+        coldest: [
+          { location: "Ushuaia, Argentina", temp: -10 },
+          { location: "Punta Arenas, Chile", temp: -7 },
+          { location: "La Paz, Bolivia", temp: -5 }
+        ]
+      },
+      "Africa": {
+        hottest: [
+          { location: "Dallol, Ethiopia", temp: 52 },
+          { location: "Korbous, Tunisia", temp: 50 },
+          { location: "Marrakech, Morocco", temp: 49 }
+        ],
+        coldest: [
+          { location: "Ifrane, Morocco", temp: -2 },
+          { location: "Sutherland, South Africa", temp: -5 },
+          { location: "Windhoek, Namibia", temp: -3 }
+        ]
+      },
+      "Oceania": {
+        hottest: [
+          { location: "Alice Springs, Australia", temp: 45 },
+          { location: "Perth, Australia", temp: 43 },
+          { location: "Darwin, Australia", temp: 42 }
+        ],
+        coldest: [
+          { location: "Queenstown, New Zealand", temp: -5 },
+          { location: "Christchurch, New Zealand", temp: -3 },
+          { location: "Nelson, New Zealand", temp: -2 }
+        ]
+      }
+    };
+    
+    function updateContinentalTab() {
+      const select = document.getElementById("continentSelect");
+      const continent = select.value;
+      const container = document.getElementById("continentalContainer");
+      container.innerHTML = "";
+      if (!continent || !continentalData[continent]) return;
+      const data = continentalData[continent];
+      
+      // Create box for hottest
+      const hottestBox = document.createElement("div");
+      hottestBox.className = "continental-box";
+      hottestBox.innerHTML = "<h3>Top Hottest in " + continent + " 🔥</h3><ul id='continentalHottest'></ul>";
+      // Populate hottest
+      const hottestUl = hottestBox.querySelector("ul");
+      data.hottest.forEach(item => {
+        const li = document.createElement("li");
+        li.textContent = `${item.location} - ${item.temp}°C`;
+        hottestUl.appendChild(li);
+      });
+      
+      // Create box for coldest
+      const coldestBox = document.createElement("div");
+      coldestBox.className = "continental-box";
+      coldestBox.innerHTML = "<h3>Top Coldest in " + continent + " ❄️</h3><ul id='continentalColdest'></ul>";
+      // Populate coldest
+      const coldestUl = coldestBox.querySelector("ul");
+      data.coldest.forEach(item => {
+        const li = document.createElement("li");
+        li.textContent = `${item.location} - ${item.temp}°C`;
+        coldestUl.appendChild(li);
+      });
+      
+      container.appendChild(hottestBox);
+      container.appendChild(coldestBox);
     }
   </script>
 </body>
